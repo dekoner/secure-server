@@ -133,7 +133,7 @@
                   <th>Время последнего опроса</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="sensTable">
                 <tr>
                   <td>1.</td>
                   <td>123</td>
@@ -183,7 +183,7 @@
     <strong></strong>
     .
     <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 3.0.5
+      <b>Version</b> 0.0.1
     </div>
   </footer>
 
@@ -197,10 +197,43 @@
 
 <!-- jQuery -->
 <script src="jquery.min.js"></script>
-<!-- overlayScrollbars -->
-<script src="jquery.overlayScrollbars.min.js"></script>
 <!-- AdminLTE App -->
 <script src="adminlte.min.js"></script>
+
+<script>
+
+  let timerId = setInterval(() => {
+    $.ajax({
+      url: '../api/all',
+      type: "GET",
+      contentType: "application/json",
+      success: function (records) {
+        let s = "warning";
+        for (let i = 0; i < records.sensors.length; i++){
+          let badge = 'warning';
+          if (records.sensors[i].bat > 80) {
+            badge = "success";
+          }
+          if (records.sensors[i].bat < 20) {
+            badge = "danger";
+          }
+
+          let state = 'fas fa-times text-danger';
+          if (records.sensors[i].sensor > 0) {
+            state = 'fas fa-check text-success';
+          }
+          s = s + '<tr><td>' + i + '</td><td>' + records.sensors[i].id + '</td><td>____</td>' +
+                  '<td><span class="badge bg-'+ badge +'">' + records.sensors[i].bat + '%</span></td>' +
+                  '<td><i class="' + state +'"></i></td><td>3с</td></tr>';
+        }
+        $('#sensTable').html(s);
+        console.log(records);
+      }
+    });
+  }, 2000);
+
+
+</script>
 
 </body>
 </html>
