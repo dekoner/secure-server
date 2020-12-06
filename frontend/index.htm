@@ -83,11 +83,11 @@
     <section class="content">
       <div class="container-fluid">
         
-        <div class="info-box bg-success row" style="align-items: center">
+        <div class="info-box bg-success row" style="align-items: center; margin-left: 0px" id="successState">
                 <span class="info-box-text col-12" style="text-align: center; font-size: larger">Охранная система включена</span>
             </div>
  
-        <div class="info-box bg-danger row" style="align-items: center">
+        <div class="info-box bg-danger row" style="align-items: center; margin-left: 0px" id="dangerState">
                 <span class="info-box-text col-12" style="text-align: center; font-size: larger">Охранная система выключена</span>
             </div>
         
@@ -105,10 +105,10 @@
           <div class="card-body">
             <div class="row">
               <div class="col-6">
-                <button type="button" class="btn btn-block bg-gradient-success">Включить</button>
+                <button type="button" class="btn btn-block bg-gradient-success" id="onSecure">Включить</button>
               </div>
               <div class="col-6">
-                <button type="button" class="btn btn-block bg-gradient-danger">Выключить</button>
+                <button type="button" class="btn btn-block bg-gradient-danger" id="offSecure">Выключить</button>
               </div>
             </div>  
             
@@ -211,7 +211,6 @@
 <script>
 
   let timerId = setInterval(() => {
-    console.log("send");
     $.ajax({
       url: '../api/all',
       type: "GET",
@@ -232,10 +231,11 @@
             state = 'fas fa-check text-success';
           }
           let type;
+          console.log(records.sensors[i].type);
           switch (records.sensors[i].type){
-            case 0: type = "Сенсор";
-            case 1: type = "Робот";
-            case 2: type = "Пинпад";
+            case 0: type = "Сенсор"; break;
+            case 1: type = "Робот"; break;
+            case 2: type = "Пинпад"; break;
             default: type = "undefined";
           }
           s = s + '<tr><td>' + i + '</td><td>' + records.sensors[i].id + '</td><td>____</td>' +
@@ -243,11 +243,48 @@
                   '<td><i class="' + state +'"></i></td><td>'+type+'</td></tr>';
         }
         $('#sensTable').html(s);
-        console.log(records);
       }
     });
   }, 1000);
 
+  let timerState = setInterval(() => {
+    $.ajax({
+      url: '../api/securestate',
+      type: "GET",
+      contentType: "application/json",
+      success: function (records) {
+        if (records.secureState) {
+          $("#dangerState").css("display", "none");
+          $("#successState").css("display", "flex");
+        } else {
+          $("#dangerState").css("display", "flex");
+          $("#successState").css("display", "none");         
+        }
+      }
+    });
+  }, 1000);
+
+  $("#onSecure").click(function(){
+    $.ajax({
+      url: '../api/onsecure',
+      type: "POST",
+      contentType: "text/plain",
+      success: function (records) {
+        console.log(records);
+      }
+    });
+  })
+
+  $("#offSecure").click(function(){
+    $.ajax({
+      url: '../api/offsecure',
+      type: "POST",
+      contentType: "text/plain",
+      success: function (records) {
+        console.log(records);
+      }
+    });
+  })
 
 </script>
 
