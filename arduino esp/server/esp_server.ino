@@ -4,14 +4,19 @@
 #include <ArduinoOTA.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
 #include <FS.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include <WiFiClientSecure.h>
 
 #ifndef STASSID
-#define STASSID "vlad plohoy 4elovek"
-#define STAPSK  "olegoleg"
+#define STASSID "Serj-Home"
+#define STAPSK  "89205619790"
 #endif
+
+#define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -20,11 +25,58 @@ FS* filesystem = &LittleFS;
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
+const String webhook = SECRET_WEBHOOK;
+const int httpsPort = 443;
+
 ESP8266WebServer server(80);
 File fsUploadFile;
+//WiFiClient client;
 
-String sens[10][3];
+
+String sens[10][5];
 bool secureState = false;
+
+// Fingerprint for demo URL, expires on June 2, 2021, needs to be updated well before this date
+const uint8_t fingerprint[20] = {0x03, 0xd3, 0xfe, 0xa6, 0x26, 0x78, 0x69, 0xd1, 0x03, 0xdf, 0x7f, 0x54, 0x38, 0xd0, 0x7e, 0x8a, 0x89, 0x6d, 0xb9, 0x67};
+
+
+void discord_send(String content) {
+  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+
+   //client->setFingerprint(fingerprint);
+   WiFiClientSecure client;
+   client.setFingerprint(fingerprint);
+
+   HTTPClient http;
+  DBG_OUTPUT_PORT.print("[HTTP] begin...\n");
+  // configure traged server and url
+  http.begin(client, webhook); //HTTP
+  http.addHeader("Content-Type", "application/json");
+
+  DBG_OUTPUT_PORT.print("[HTTP] POST...\n");
+  // start connection and send HTTP header and body
+  DBG_OUTPUT_PORT.println(webhook);
+  String json = "{\"content\":\"" + content + "\"}";
+  DBG_OUTPUT_PORT.println(json);
+  int httpCode = http.POST(json);
+
+  // httpCode will be negative on error
+  if (httpCode > 0) {
+    // HTTP header has been send and Server response header has been handled
+    DBG_OUTPUT_PORT.printf("[HTTP] POST... code: %d\n", httpCode);
+
+    // file found at server
+    if (httpCode == HTTP_CODE_OK || httpCode == 400) {
+      const String& payload = http.getString();
+      DBG_OUTPUT_PORT.println("received payload:\n<<");
+      DBG_OUTPUT_PORT.println(payload);
+      DBG_OUTPUT_PORT.println(">>");
+    }
+  } else {
+    DBG_OUTPUT_PORT.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+  }
+  http.end();
+}
 
 void handleRoot() {
   server.send(200, "text/plain", "hello from esp8266!");
@@ -216,24 +268,20 @@ int findEmpty() {
 }
 
 int genId() {
-  int k = -1;
   bool fl = false;
-  for (int i = 1; i < 10; i++){
+  for (byte i = 1; i < 10; i++) {
     fl = false;
-    for (int j = 1; j < 10; j++){
-      String s = String(j);
-      if (sens[j][0] == String(i)) {
+    for (byte j = 0; j < 10; j++) {
+      String n = String(i);
+      if (sens[j][0] == n) {
         fl = true;
-        j = 10;
       }
     }
-    if(!fl){
-      k = i;
-      i = 10;
+    if (!fl) {
+      return i;
     }
   }
-
-  return k;
+  return -1;
 }
 
 void setup() {
@@ -384,21 +432,27 @@ void setup() {
     json = String();
   });
 
-  server.on("api/onsecure", HTTP_POST, [](){
-      secureState = true;
-      server.send(200, "text/plain", "secure ON");
-      DBG_OUTPUT_PORT.println("secure ON");
+  server.on("/api/onsecure", HTTP_POST, []() {
+    secureState = true;
+    server.send(200, "text/plain", "secure ON");
+    DBG_OUTPUT_PORT.println("secure ON");
   });
 
-  server.on("api/offsecure", HTTP_POST, [](){
-      secureState = false;
-      server.send(200, "text/plain", "secure OFF");
-      DBG_OUTPUT_PORT.println("secure OFF");
+  server.on("/api/sendmessage", HTTP_POST, []() {
+    discord_send(server.arg(0));
+    server.send(200, "text/plain", "send");
+    DBG_OUTPUT_PORT.println("message send");
   });
 
-  server.on("api/securestate", HTTP_GET, [](){
+  server.on("/api/offsecure", HTTP_POST, []() {
+    secureState = false;
+    server.send(200, "text/plain", "secure OFF");
+    DBG_OUTPUT_PORT.println("secure OFF");
+  });
+
+  server.on("/api/securestate", HTTP_GET, []() {
     byte b = 0;
-    if (secureState == true){
+    if (secureState == true) {
       b = 1;
     }
     String json = "{\"secureState\":" + String(b);
@@ -406,7 +460,6 @@ void setup() {
     server.send(200, "text/json", json);
     json = String();
   });
-  
 
   //DynamicJsonDocument doc(1024);
 
@@ -434,7 +487,7 @@ void setup() {
       } else {
         Serial.println("failed to load json config");
       }
-      if (id == "0"){
+      if (id == "0") {
         id = String(genId());
         //id = "5";
         nullId = true;
@@ -455,15 +508,16 @@ void setup() {
           sens[num][0] = id;
           sens[num][1] = bat;
           sens[num][2] = sensor;
+          sens[num][3] = type;
           DBG_OUTPUT_PORT.print("Sensor added:");
           DBG_OUTPUT_PORT.println(id);
         }
       }
-      if(nullId){
-        server.send(200, "text/plain", "{\"id\":\""+String(id)+"\"}");
+      if (nullId) {
+        server.send(200, "text/plain", "{\"id\":\"" + String(id) + "\"}");
       } else {
         server.send(200, "text/plain", "OK");
-      }      
+      }
     }
   });
 
