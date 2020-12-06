@@ -83,6 +83,14 @@
     <section class="content">
       <div class="container-fluid">
         
+        <div class="info-box bg-success row" style="align-items: center">
+                <span class="info-box-text col-12" style="text-align: center; font-size: larger">Охранная система включена</span>
+            </div>
+ 
+        <div class="info-box bg-danger row" style="align-items: center">
+                <span class="info-box-text col-12" style="text-align: center; font-size: larger">Охранная система выключена</span>
+            </div>
+        
         <div class="card card-secondary">
           <div class="card-header">
             <h3 class="card-title">Управление охраной</h3>
@@ -130,7 +138,7 @@
                   <th>Имя устройства</th>
                   <th>Заряд батареи</th>
                   <th>Тек. состояние</th>
-                  <th>Время последнего опроса</th>
+                  <th>Тип устройства</th>
                 </tr>
               </thead>
               <tbody id="sensTable">
@@ -203,12 +211,13 @@
 <script>
 
   let timerId = setInterval(() => {
+    console.log("send");
     $.ajax({
       url: '../api/all',
       type: "GET",
       contentType: "application/json",
       success: function (records) {
-        let s = "warning";
+        let s = "";
         for (let i = 0; i < records.sensors.length; i++){
           let badge = 'warning';
           if (records.sensors[i].bat > 80) {
@@ -222,15 +231,22 @@
           if (records.sensors[i].sensor > 0) {
             state = 'fas fa-check text-success';
           }
+          let type;
+          switch (records.sensors[i].type){
+            case 0: type = "Сенсор";
+            case 1: type = "Робот";
+            case 2: type = "Пинпад";
+            default: type = "undefined";
+          }
           s = s + '<tr><td>' + i + '</td><td>' + records.sensors[i].id + '</td><td>____</td>' +
                   '<td><span class="badge bg-'+ badge +'">' + records.sensors[i].bat + '%</span></td>' +
-                  '<td><i class="' + state +'"></i></td><td>3с</td></tr>';
+                  '<td><i class="' + state +'"></i></td><td>'+type+'</td></tr>';
         }
         $('#sensTable').html(s);
         console.log(records);
       }
     });
-  }, 2000);
+  }, 1000);
 
 
 </script>
