@@ -12,11 +12,11 @@
 #include <WiFiClientSecure.h>
 
 #ifndef STASSID
-#define STASSID "Serj-Home"
-#define STAPSK  "89205619790"
+#define STASSID ""
+#define STAPSK  ""
 #endif
 
-#define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
+#define SECRET_WEBHOOK ""
 
 #define DBG_OUTPUT_PORT Serial
 
