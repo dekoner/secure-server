@@ -9,8 +9,8 @@
 #include <ArduinoJson.h>
 
 #ifndef STASSID
-#define STASSID "SSID"
-#define STAPSK  "PSK"
+#define STASSID "vlad plohoy 4elovek"
+#define STAPSK  "olegoleg"
 #endif
 
 #define DBG_OUTPUT_PORT Serial
@@ -24,6 +24,7 @@ ESP8266WebServer server(80);
 File fsUploadFile;
 
 String sens[10][3];
+bool secureState = false;
 
 void handleRoot() {
   server.send(200, "text/plain", "hello from esp8266!");
@@ -214,6 +215,27 @@ int findEmpty() {
   return k;
 }
 
+int genId() {
+  int k = -1;
+  bool fl = false;
+  for (int i = 1; i < 10; i++){
+    fl = false;
+    for (int j = 1; j < 10; j++){
+      String s = String(j);
+      if (sens[j][0] == String(i)) {
+        fl = true;
+        j = 10;
+      }
+    }
+    if(!fl){
+      k = i;
+      i = 10;
+    }
+  }
+
+  return k;
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Booting");
@@ -333,6 +355,7 @@ void setup() {
         json += "\"id\":" + sens[num][0];
         json += ", \"bat\":" + sens[num][1];
         json += ", \"sensor\":" + sens[num][2];
+        json += ", \"type\":" + sens[num][3];
         json += "}";
         server.send(200, "text/json", json);
         json = String();
@@ -344,13 +367,14 @@ void setup() {
     String json = "{\"sensors\" : [";
     bool fl = false;
     for (byte i = 0; i < 10; i++) {
-      if (sens[i][0] != "") {
+      if (sens[i][0] != "" && sens[i][0] != "0") {
         if (fl) {
           json += ",";
         };
         json += "{\"id\":" + sens[i][0];
         json += ", \"bat\":" + sens[i][1];
         json += ", \"sensor\":" + sens[i][2];
+        json += ", \"type\":" + sens[i][3];
         json += "}";
         fl = true;
       }
@@ -359,6 +383,30 @@ void setup() {
     server.send(200, "text/json", json);
     json = String();
   });
+
+  server.on("api/onsecure", HTTP_POST, [](){
+      secureState = true;
+      server.send(200, "text/plain", "secure ON");
+      DBG_OUTPUT_PORT.println("secure ON");
+  });
+
+  server.on("api/offsecure", HTTP_POST, [](){
+      secureState = false;
+      server.send(200, "text/plain", "secure OFF");
+      DBG_OUTPUT_PORT.println("secure OFF");
+  });
+
+  server.on("api/securestate", HTTP_GET, [](){
+    byte b = 0;
+    if (secureState == true){
+      b = 1;
+    }
+    String json = "{\"secureState\":" + String(b);
+    json += "}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+  
 
   //DynamicJsonDocument doc(1024);
 
@@ -374,19 +422,29 @@ void setup() {
       String id;
       String bat;
       String sensor;
+      String type;
+      bool nullId = false;
       if (!err) {
         Serial.println("\nparsed json");
 
         id = json["id"].as<String>();
         bat = json["bat"].as<String>();
         sensor = json["sensor"].as<String>();
+        type = json["type"].as<String>();
       } else {
         Serial.println("failed to load json config");
+      }
+      if (id == "0"){
+        id = String(genId());
+        //id = "5";
+        nullId = true;
+        DBG_OUTPUT_PORT.println("Gen id");
       }
       int num = findSensor(id);
       if (num >= 0) {
         sens[num][1] = bat;
         sens[num][2] = sensor;
+        sens[num][3] = type;
         DBG_OUTPUT_PORT.print("Sensor updated. bat: ");
         DBG_OUTPUT_PORT.print(sens[num][1]);
         DBG_OUTPUT_PORT.print(", sens: ");
@@ -401,7 +459,11 @@ void setup() {
           DBG_OUTPUT_PORT.println(id);
         }
       }
-      server.send(200, "text/plain", "OK");
+      if(nullId){
+        server.send(200, "text/plain", "{\"id\":\""+String(id)+"\"}");
+      } else {
+        server.send(200, "text/plain", "OK");
+      }      
     }
   });
 
