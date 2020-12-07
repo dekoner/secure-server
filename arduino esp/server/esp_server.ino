@@ -12,11 +12,11 @@
 #include <WiFiClientSecure.h>
 
 #ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
+#define STASSID "vlad plohoy 4elovek"
+#define STAPSK  "olegoleg"
 #endif
 
-#define SECRET_WEBHOOK ""
+#define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -436,6 +436,7 @@ void setup() {
     secureState = true;
     server.send(200, "text/plain", "secure ON");
     DBG_OUTPUT_PORT.println("secure ON");
+    discord_send(String("Охранная система включена"));
   });
 
   server.on("/api/sendmessage", HTTP_POST, []() {
@@ -448,6 +449,7 @@ void setup() {
     secureState = false;
     server.send(200, "text/plain", "secure OFF");
     DBG_OUTPUT_PORT.println("secure OFF");
+    discord_send(String("Охранная система выключена"));
   });
 
   server.on("/api/securestate", HTTP_GET, []() {
@@ -511,6 +513,7 @@ void setup() {
           sens[num][3] = type;
           DBG_OUTPUT_PORT.print("Sensor added:");
           DBG_OUTPUT_PORT.println(id);
+          discord_send(String("Добавлен датчик. ID: ") + String(id));
         }
       }
       if (nullId) {
@@ -524,7 +527,27 @@ void setup() {
   server.begin();
 }
 
+bool alarm = false;
+bool lastalarm = false;
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
+  if (secureState) {
+    for (byte i = 0; i < 10; i++){
+      if (sens[i][0] != "" && sens[i][0] != "0"){
+        if (sens[i][4] != "off" && sens[i][3] == "0"){
+          bool sec = false;
+          if (sens[i][2] = "1"){
+            sec = true;
+          }
+          alarm = alarm || !sec;
+        }
+      }
+    }
+  }
+  if ((alarm != lastalarm) && alarm){
+    //discord_send("В помещении посторонние!!!");
+    DBG_OUTPUT_PORT.println("secure alarm");
+  }
+  lastalarm = alarm;
 }
