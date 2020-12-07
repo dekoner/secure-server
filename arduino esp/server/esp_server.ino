@@ -11,12 +11,14 @@
 #include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
 
+#define DISCORD_SND false
+
 #ifndef STASSID
-#define STASSID "vlad plohoy 4elovek"
-#define STAPSK  "olegoleg"
+#define STASSID ""
+#define STAPSK  ""
 #endif
 
-#define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
+#define SECRET_WEBHOOK ""
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -33,21 +35,23 @@ File fsUploadFile;
 //WiFiClient client;
 
 
-String sens[10][5];
+String sens[10][7];
 bool secureState = false;
+bool alarm = false;
 
 // Fingerprint for demo URL, expires on June 2, 2021, needs to be updated well before this date
 const uint8_t fingerprint[20] = {0x03, 0xd3, 0xfe, 0xa6, 0x26, 0x78, 0x69, 0xd1, 0x03, 0xdf, 0x7f, 0x54, 0x38, 0xd0, 0x7e, 0x8a, 0x89, 0x6d, 0xb9, 0x67};
 
 
 void discord_send(String content) {
+  if (!DISCORD_SND) return;
   //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
 
-   //client->setFingerprint(fingerprint);
-   WiFiClientSecure client;
-   client.setFingerprint(fingerprint);
+  //client->setFingerprint(fingerprint);
+  WiFiClientSecure client;
+  client.setFingerprint(fingerprint);
 
-   HTTPClient http;
+  HTTPClient http;
   DBG_OUTPUT_PORT.print("[HTTP] begin...\n");
   // configure traged server and url
   http.begin(client, webhook); //HTTP
@@ -400,11 +404,17 @@ void setup() {
         server.send(500, "text/plain", "Sensor not found");
       } else {
         String json = "{";
-        json += "\"id\":" + sens[num][0];
-        json += ", \"bat\":" + sens[num][1];
-        json += ", \"sensor\":" + sens[num][2];
-        json += ", \"type\":" + sens[num][3];
-        json += "}";
+        json += "{\"id\":\"" + sens[num][0] + "\"";
+        json += ", \"bat\":\"" + sens[num][1] + "\"";
+        json += ", \"sensor\":\"" + sens[num][2] + "\"";
+        json += ", \"type\":\"" + sens[num][3] + "\"";
+        String buf_str;
+        if(sens[num][5] != ""){
+          buf_str = "___";
+        } else {
+          buf_str = sens[num][5];
+        }
+        json += ", \"name\":\"" + buf_str + "\"}";
         server.send(200, "text/json", json);
         json = String();
       }
@@ -419,11 +429,17 @@ void setup() {
         if (fl) {
           json += ",";
         };
-        json += "{\"id\":" + sens[i][0];
-        json += ", \"bat\":" + sens[i][1];
-        json += ", \"sensor\":" + sens[i][2];
-        json += ", \"type\":" + sens[i][3];
-        json += "}";
+        json += "{\"id\":\"" + sens[i][0] + "\"";
+        json += ", \"bat\":\"" + sens[i][1] + "\"";
+        json += ", \"sensor\":\"" + sens[i][2] + "\"";
+        json += ", \"type\":\"" + sens[i][3] + "\"";
+        String buf_str;
+        if(sens[i][5] != ""){
+          buf_str = "___";
+        } else {
+          buf_str = sens[i][5];
+        }
+        json += ", \"name\":\"" + buf_str + "\"}";
         fl = true;
       }
     }
@@ -457,13 +473,50 @@ void setup() {
     if (secureState == true) {
       b = 1;
     }
+
+    if (alarm) {
+      b = 2;
+    }
+
     String json = "{\"secureState\":" + String(b);
     json += "}";
     server.send(200, "text/json", json);
     json = String();
   });
 
-  //DynamicJsonDocument doc(1024);
+  server.on("/api/sensname", HTTP_POST, []() {
+    Serial.println("___");
+    if (server.args() == 0) {
+      server.send(500, "text/plain", "BAD ARGS");
+    } else {
+      String input = server.arg(0);
+      DBG_OUTPUT_PORT.println(input);
+      DynamicJsonDocument json(1024);
+      DeserializationError err = deserializeJson(json, input);
+      String id;
+      String sname;
+      if (!err) {
+        Serial.println("\nparsed json");
+
+        id = json["id"].as<String>();
+        sname = json["name"].as<String>();
+      } else {
+        Serial.println("failed to load json config");
+      }
+      int num = findSensor(id);
+      if (num >= 0) {
+        sens[num][5] = sname;
+        DBG_OUTPUT_PORT.print("Set sensor name updated. id: ");
+        DBG_OUTPUT_PORT.print(sens[num][0]);
+        DBG_OUTPUT_PORT.print(", name: ");
+        DBG_OUTPUT_PORT.println(sens[num][5]);
+        server.send(200, "text/plain", "OK");
+      } else {
+        DBG_OUTPUT_PORT.println("Sensor not found");
+        server.send(500, "text/plain", "Sensor not found");
+      }
+    }
+  });
 
   server.on("/api/sensors", HTTP_POST, []() {
     Serial.println("___");
@@ -527,26 +580,27 @@ void setup() {
   server.begin();
 }
 
-bool alarm = false;
 bool lastalarm = false;
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
   if (secureState) {
-    for (byte i = 0; i < 10; i++){
-      if (sens[i][0] != "" && sens[i][0] != "0"){
-        if (sens[i][4] != "off" && sens[i][3] == "0"){
+    for (byte i = 0; i < 10; i++) {
+      if (sens[i][0] != "" && sens[i][0] != "0") {
+        if (sens[i][4] != "off" && sens[i][3] == "0") {
           bool sec = false;
-          if (sens[i][2] = "1"){
+          if (sens[i][2] == "1") {
             sec = true;
           }
           alarm = alarm || !sec;
         }
       }
     }
+  } else {
+    alarm = false;
   }
-  if ((alarm != lastalarm) && alarm){
-    //discord_send("В помещении посторонние!!!");
+  if ((alarm != lastalarm) && alarm) {
+    discord_send("В помещении посторонние!!!");
     DBG_OUTPUT_PORT.println("secure alarm");
   }
   lastalarm = alarm;
