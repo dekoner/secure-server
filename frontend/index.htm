@@ -79,26 +79,6 @@
     </div>
     <!-- /.content-header -->
 
-    <div class="modal" tabindex="-1" role="dialog" id="editModal">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>Modal body text goes here.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Save changes</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
@@ -180,7 +160,7 @@
                         Датчик окна №2
                       </div>
                       <div class="col-1-lg">
-                      <button type="button" class="btn btn-sm btn-block bg-success" data-toggle="modal" data-target="#editModal"><i class="fas fa-edit"></i></button>
+                      <button type="button" class="btn btn-sm btn-block bg-success" data-toggle="modal" data-target="#modal-lg"><i class="fas fa-edit"></i></button>
                       </div>
                     </div></td>
                   <td><span class="badge bg-success">90%</span></td>
@@ -209,6 +189,29 @@
         </div>
         <!-- /.card -->
         
+        <div class="modal fade" id="modal-lg">
+        <div class="modal-dialog modal-sm">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Введите имя</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <input type="text" id="editName">
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal" id="cancelBtn">Закрыть</button>
+              <button type="button" class="btn btn-primary" id="saveBtn">Сохранить</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+        
       </div><!-- /.container-fluid -->
     </section>
     <!-- /.content -->
@@ -235,13 +238,9 @@
 <!-- AdminLTE App -->
 <script src="adminlte.min.js"></script>
 
+<script src="bootstrap.js"></script>
+
 <script>
-
-  function editName(id){
-    
-  }
-
-
   let timerId = setInterval(() => {
     $.ajax({
       url: '../api/all',
@@ -262,15 +261,18 @@
           if (records.sensors[i].sensor > 0) {
             state = 'fas fa-check text-success';
           }
-          let type;
+          let type = "";
           console.log(records.sensors[i].type);
           switch (records.sensors[i].type){
-            case 0: type = "Сенсор"; break;
-            case 1: type = "Робот"; break;
-            case 2: type = "Пинпад"; break;
+            case "0": type = "Сенсор"; break;
+            case "1": type = "Робот"; break;
+            case "2": type = "Пинпад"; break;
             default: type = "undefined";
           }
-          s = s + '<tr><td>' + records.sensors[i].id + '</td><td>____</td>' +
+          
+          s = s + '<tr><td>' + records.sensors[i].id + '</td><td><div class="row"><div class="col-10">'+records.sensors[i].name+
+                  '</div><div class="col-1-lg"><button type="button" class="btn btn-sm btn-block bg-success"' + 
+                  'data-toggle="modal" data-target="#modal-lg" onclick="setGlobId('+records.sensors[i].id+')"><i class="fas fa-edit"></i></button></div></div></td>' +
                   '<td><span class="badge bg-'+ badge +'">' + records.sensors[i].bat + '%</span></td>' +
                   '<td><i class="' + state +'"></i></td><td>'+type+'</td></tr>';
         }
@@ -278,6 +280,24 @@
       }
     });
   }, 1000);
+
+var globID;
+
+function setGlobId(id){
+  globID = id;
+}
+
+$('#saveBtn').click(function(){
+    $.ajax({
+      url: '../api/sensname?plain={"id":"'+globID+'","name":"'+$("#editName").val()+'"}',
+      type: "POST",
+      contentType: "text/plain",
+      success: function (records) {
+        console.log(records);
+      }
+    });
+    $("#cancelBtn").click();
+})
 
   let timerState = setInterval(() => {
     $.ajax({
@@ -324,8 +344,6 @@
   })
 
   $("#offSecure").click(function(){
-    console.log('ds'); 
-    $('#editModal').modal('show');
     $.ajax({
       url: '../api/offsecure',
       type: "POST",
