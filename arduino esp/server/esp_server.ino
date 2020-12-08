@@ -14,8 +14,8 @@
 #define DISCORD_SND false
 
 #ifndef STASSID
-#define STASSID "vlad plohoy 4elovek"
-#define STAPSK  "olegoleg"
+#define STASSID ""
+#define STAPSK  ""
 #endif
 
 #define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
@@ -38,6 +38,8 @@ File fsUploadFile;
 String sens[10][7];
 bool secureState = false;
 bool alarm = false;
+String lastRFIDId = "";
+String arRFID[10];
 
 // Fingerprint for demo URL, expires on June 2, 2021, needs to be updated well before this date
 const uint8_t fingerprint[20] = {0x03, 0xd3, 0xfe, 0xa6, 0x26, 0x78, 0x69, 0xd1, 0x03, 0xdf, 0x7f, 0x54, 0x38, 0xd0, 0x7e, 0x8a, 0x89, 0x6d, 0xb9, 0x67};
@@ -288,6 +290,30 @@ int genId() {
   return -1;
 }
 
+void addRFID(String id) {
+  bool fl = false;
+  int num = -1;
+  for (byte i = 0; i < 10; i++) {
+    if (arRFID[i] == id) {
+      fl = true;
+    }
+    if ((arRFID[i] == "") && (num == -1)) {
+      num = i;
+    }
+  }
+  if (!fl && (num >= 0)) {
+    arRFID[num] == id;
+  }
+}
+
+void delRFID(String id) {
+  for (byte i = 0; i < 10; i++) {
+    if (arRFID[i] == id) {
+      arRFID[i] = "";
+    }
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Booting");
@@ -409,7 +435,7 @@ void setup() {
         json += ", \"sensor\":\"" + sens[num][2] + "\"";
         json += ", \"type\":\"" + sens[num][3] + "\"";
         String buf_str;
-        if(sens[num][5] == ""){
+        if (sens[num][5] == "") {
           buf_str = "___";
         } else {
           buf_str = sens[num][5];
@@ -434,7 +460,7 @@ void setup() {
         json += ", \"sensor\":\"" + sens[i][2] + "\"";
         json += ", \"type\":\"" + sens[i][3] + "\"";
         String buf_str;
-        if(sens[i][5] == ""){
+        if (sens[i][5] == "") {
           buf_str = "___";
         } else {
           buf_str = sens[i][5];
@@ -518,6 +544,60 @@ void setup() {
     }
   });
 
+  server.on("/api/RFID", HTTP_POST, []() {
+    Serial.println("___");
+    if (server.args() == 0) {
+      server.send(500, "text/plain", "BAD ARGS");
+    } else {
+      String input = server.arg(0);
+      DBG_OUTPUT_PORT.println(input);
+      DynamicJsonDocument json(1024);
+      DeserializationError err = deserializeJson(json, input);
+      String RFIDId;
+      String operation;
+      if (!err) {
+        Serial.println("\nparsed json");
+
+        RFIDId = json["RFIDId"].as<String>();
+        operation = json["operation"].as<String>();
+      } else {
+        Serial.println("failed to load json config");
+      }
+
+      if (operation == "ADD") {
+        addRFID(RFIDId);
+      };
+      if (operation == "DEL") {
+        delRFID(RFIDId);
+      }
+      server.send(200, "text/plain", operation);
+      DBG_OUTPUT_PORT.println(operation);
+    }
+  });
+
+  server.on("/api/RFID", HTTP_GET, []() {
+    String json = "{[";
+    bool fl = false;
+    for (byte i = 0; i < 10; i++) {
+      if (arRFID[i] != "") {
+        if (fl) {
+          json += ",";
+        };
+        json += "{\"RFIDId\":\"" + arRFID[i] + "\"}";
+        fl = true;
+      }
+    }
+    json += "]}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+
+  server.on("/api/lastRFID", HTTP_GET, []() {
+    String json = "{\"RFIDId\":\"" + lastRFIDId + "\"}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+
   server.on("/api/sensors", HTTP_POST, []() {
     Serial.println("___");
     if (server.args() == 0) {
@@ -573,6 +653,10 @@ void setup() {
         server.send(200, "text/plain", "{\"id\":\"" + String(id) + "\"}");
       } else {
         server.send(200, "text/plain", "OK");
+      }
+
+      if (type == "3") {
+        lastRFIDId = sensor;
       }
     }
   });
