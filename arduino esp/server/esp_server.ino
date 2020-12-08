@@ -14,11 +14,11 @@
 #define DISCORD_SND false
 
 #ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
+#define STASSID "vlad plohoy 4elovek"
+#define STAPSK  "olegoleg"
 #endif
 
-#define SECRET_WEBHOOK ""
+#define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -409,7 +409,7 @@ void setup() {
         json += ", \"sensor\":\"" + sens[num][2] + "\"";
         json += ", \"type\":\"" + sens[num][3] + "\"";
         String buf_str;
-        if(sens[num][5] != ""){
+        if(sens[num][5] == ""){
           buf_str = "___";
         } else {
           buf_str = sens[num][5];
@@ -434,7 +434,7 @@ void setup() {
         json += ", \"sensor\":\"" + sens[i][2] + "\"";
         json += ", \"type\":\"" + sens[i][3] + "\"";
         String buf_str;
-        if(sens[i][5] != ""){
+        if(sens[i][5] == ""){
           buf_str = "___";
         } else {
           buf_str = sens[i][5];
