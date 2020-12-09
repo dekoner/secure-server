@@ -96,7 +96,7 @@
             <div class="col-6">
                 <div class="card card-secondary">
                     <div class="card-header">
-                      <h3 class="card-title">Пароли доступа</h3>
+                      <h3 class="card-title">RFID ID</h3>
           
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
@@ -106,57 +106,40 @@
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
+                      <div class="row">
+                        <div class="col-8">
+                          Последняя метка: <span  id="lastRFID"></span>
+                        </div>        
+                                      
+                        <div class="col-4">
+                          <button type="button" class="btn btn-block bg-gradient-success" id="addRFID">Добавить метку</button>
+                        </div>
+                      </div>
           
                       <table class="table table-bordered">
                         <thead>                  
                           <tr>
-                            <th>ID</th>
-                            <th>Имя устройства</th>
-                            <th>Заряд батареи</th>
-                            <th>Тек. состояние</th>
-                            <th>Тип устройства</th>
+                            <th>ID RFID метки</th>
                           </tr>
                         </thead>
-                        <tbody id="sensTable">
+                        <tbody id="RFIDTable">
                           <tr>
-                            <td>123</td>
-                            <td>Датчик окна №1</td>
-                            <td><span class="badge bg-danger">25%</span></td>
-                            <td><i class="fas fa-check text-success"></i></td>
-                            <td>5с</td>
+                            <td>
+                              <div class="row">
+                                <div class="col-11">
+                                  123
+                                </div>
+                                <div class="col-1">
+                                  <button type="button" class="btn btn-sm btn-block bg-danger" data-toggle="modal" data-target="#modal-lg"><i class="fas fa-trash"></i></button></td>
+                                </div>
+                              </div>
+                            </td>  
                           </tr>
                           <tr>
                             <td>456</td>
-                            <td>
-                              <div class="row">
-                                <div class="col-10">
-                                  Датчик окна №2
-                                </div>
-                                <div class="col-1-lg">
-                                <button type="button" class="btn btn-sm btn-block bg-success" data-toggle="modal" data-target="#modal-lg"><i class="fas fa-edit"></i></button>
-                                </div>
-                              </div></td>
-                            <td><span class="badge bg-success">90%</span></td>
-                            <td><i class="fas fa-times text-danger"></i></td>
-                            <td>50с</td>
-                          </tr>
-                          <tr>
-                            <td>764</td>
-                            <td>NFC замок</td>
-                            <td><span class="badge bg-warning">55%</span></td>
-                            <td><i class="fas fa-check text-success"></i></td>
-                            <td>1с</td>
-                          </tr>
-                          <tr>
-                            <td>665</td>
-                            <td>Робот</td>
-                            <td><span class="badge bg-success">100%</span></td>
-                            <td><i class="fas fa-check text-success"></i></td>
-                            <td>3с</td>
                           </tr>
                         </tbody>
-                      </table>
-                      
+                      </table>                      
                     </div>
                     <!-- /.card-body -->
                   </div>
@@ -164,104 +147,59 @@
             </div>
 
             <div class="col-6">
-
-            </div>
-        </div>
-                
-        <div class="card card-secondary">
-          <div class="card-header">
-            <h3 class="card-title">Управление охраной</h3>
-
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-              </button>
-            </div>
-            <!-- /.card-tools -->
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-            <div class="row">
-              <div class="col-6">
-                <button type="button" class="btn btn-block bg-gradient-success" id="onSecure">Включить</button>
-              </div>
-              <div class="col-6">
-                <button type="button" class="btn btn-block bg-gradient-danger" id="offSecure">Выключить</button>
-              </div>
-            </div>  
-            
-          </div>
-          <!-- /.card-body -->
-        </div>
-        <!-- /.card -->
-
-        <div class="card card-secondary">
-          <div class="card-header">
-            <h3 class="card-title">Устройства</h3>
-
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-              </button>
-            </div>
-            <!-- /.card-tools -->
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-
-            <table class="table table-bordered">
-              <thead>                  
-                <tr>
-                  <th>ID</th>
-                  <th>Имя устройства</th>
-                  <th>Заряд батареи</th>
-                  <th>Тек. состояние</th>
-                  <th>Тип устройства</th>
-                </tr>
-              </thead>
-              <tbody id="sensTable">
-                <tr>
-                  <td>123</td>
-                  <td>Датчик окна №1</td>
-                  <td><span class="badge bg-danger">25%</span></td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                  <td>5с</td>
-                </tr>
-                <tr>
-                  <td>456</td>
-                  <td>
+              <div class="card card-secondary">
+                  <div class="card-header">
+                    <h3 class="card-title">Пароли</h3>
+        
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                      </button>
+                    </div>
+                    <!-- /.card-tools -->
+                  </div>
+                  <!-- /.card-header -->
+                  <div class="card-body">
                     <div class="row">
-                      <div class="col-10">
-                        Датчик окна №2
+                      <div class="col-8">
+                        Последний пароль: <span  id="lastPWD"></span>
+                      </div>        
+                                    
+                      <div class="col-4">
+                        <button type="button" class="btn btn-block bg-gradient-success" id="addPWD">Добавить пароль</button>
                       </div>
-                      <div class="col-1-lg">
-                      <button type="button" class="btn btn-sm btn-block bg-success" data-toggle="modal" data-target="#modal-lg"><i class="fas fa-edit"></i></button>
-                      </div>
-                    </div></td>
-                  <td><span class="badge bg-success">90%</span></td>
-                  <td><i class="fas fa-times text-danger"></i></td>
-                  <td>50с</td>
-                </tr>
-                <tr>
-                  <td>764</td>
-                  <td>NFC замок</td>
-                  <td><span class="badge bg-warning">55%</span></td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                  <td>1с</td>
-                </tr>
-                <tr>
-                  <td>665</td>
-                  <td>Робот</td>
-                  <td><span class="badge bg-success">100%</span></td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                  <td>3с</td>
-                </tr>
-              </tbody>
-            </table>
-            
+                    </div>
+        
+                    <table class="table table-bordered">
+                      <thead>                  
+                        <tr>
+                          <th>Пароль</th>
+                        </tr>
+                      </thead>
+                      <tbody id="PWDTable">
+                        <tr>
+                          <td>
+                            <div class="row">
+                              <div class="col-11">
+                                123
+                              </div>
+                              <div class="col-1">
+                                <button type="button" class="btn btn-sm btn-block bg-danger" data-toggle="modal" data-target="#modal-lg"><i class="fas fa-trash"></i></button></td>
+                              </div>
+                            </div>
+                          </td>  
+                        </tr>
+                        <tr>
+                          <td>456</td>
+                        </tr>
+                      </tbody>
+                    </table>                      
+                  </div>
+                  <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
           </div>
-          <!-- /.card-body -->
         </div>
-        <!-- /.card -->
-                
+
       </div><!-- /.container-fluid -->
     </section>
     <!-- /.content -->
@@ -291,119 +229,115 @@
 <script src="bootstrap.js"></script>
 
 <script>
-  let timerId = setInterval(() => {
+
+  let timerRFID = setInterval(() => {
     $.ajax({
-      url: '../api/all',
+      url: '../api/grfid',
       type: "GET",
       contentType: "application/json",
       success: function (records) {
         let s = "";
-        for (let i = 0; i < records.sensors.length; i++){
-          let badge = 'warning';
-          if (records.sensors[i].bat > 80) {
-            badge = "success";
-          }
-          if (records.sensors[i].bat < 20) {
-            badge = "danger";
-          }
-
-          let state = 'fas fa-times text-danger';
-          if (records.sensors[i].sensor > 0) {
-            state = 'fas fa-check text-success';
-          }
-          let type = "";
-          console.log(records.sensors[i].type);
-          switch (records.sensors[i].type){
-            case "0": type = "Сенсор"; break;
-            case "1": type = "Робот"; break;
-            case "2": type = "Пинпад"; break;
-            default: type = "undefined";
-          }
-          
-          s = s + '<tr><td>' + records.sensors[i].id + '</td><td><div class="row"><div class="col-10">'+records.sensors[i].name+
-                  '</div><div class="col-1-lg"><button type="button" class="btn btn-sm btn-block bg-success"' + 
-                  'data-toggle="modal" data-target="#modal-lg" onclick="setGlobId('+records.sensors[i].id+')"><i class="fas fa-edit"></i></button></div></div></td>' +
-                  '<td><span class="badge bg-'+ badge +'">' + records.sensors[i].bat + '%</span></td>' +
-                  '<td><i class="' + state +'"></i></td><td>'+type+'</td></tr>';
-        }
-        $('#sensTable').html(s);
+        for (let i = 0; i < records.rec.length; i++) {
+          s = s + '<tr><td><div class="row"><div class="col-11">'+records.rec[i].RFIDId+'</div><div class="col-1-lg">'+
+               '<button type="button" class="btn btn-sm btn-block bg-danger" data-toggle="modal" data-target="#modal-lg" onclick="deleteRFID('+records.rec[i].RFIDId+
+               ')"><i class="fas fa-trash"></i></button></td></div></div></td></tr>';
+        };
+        $('#RFIDTable').html(s);
       }
     });
   }, 1000);
 
-var globID;
-
-function setGlobId(id){
-  globID = id;
-}
-
-$('#saveBtn').click(function(){
+  let timerRFIDlast = setInterval(() => {
     $.ajax({
-      url: '../api/sensname?plain={"id":"'+globID+'","name":"'+$("#editName").val()+'"}',
-      type: "POST",
-      contentType: "text/plain",
-      success: function (records) {
-        console.log(records);
-      }
-    });
-    $("#cancelBtn").click();
-})
-
-  let timerState = setInterval(() => {
-    $.ajax({
-      url: '../api/securestate',
+      url: '../api/lastRFID',
       type: "GET",
       contentType: "application/json",
       success: function (records) {
-        switch (records.secureState) {
-          case 0:
-            $("#dangerState").css("display", "flex");
-            $("#successState").css("display", "none");
-            $("#warningState").css("display", "none");     
-            break;
-          case 1:
-            $("#dangerState").css("display", "none");
-            $("#successState").css("display", "flex");
-            $("#warningState").css("display", "none");     
-            break;
-          case 2:
-            $("#dangerState").css("display", "none");
-            $("#successState").css("display", "none");
-            $("#warningState").css("display", "flex");     
-            break;
-        
-          default:
-            $("#dangerState").css("display", "flex");
-            $("#successState").css("display", "none");
-            $("#warningState").css("display", "none");     
-            break;
-        }
+        $('#lastRFID').text(records.RFIDId)
       }
     });
   }, 1000);
 
-  $("#onSecure").click(function(){
+  function deleteRFID(RFIDId){
     $.ajax({
-      url: '../api/onsecure',
+      url: '../api/RFID?plain={"operation":"DEL", "RFIDId":"'+RFIDId+'"}',
       type: "POST",
       contentType: "text/plain",
       success: function (records) {
         console.log(records);
       }
     });
-  })
+  }
 
-  $("#offSecure").click(function(){
+  function addRFID(RFIDId){
     $.ajax({
-      url: '../api/offsecure',
+      url: '../api/RFID?plain={"operation":"ADD", "RFIDId":"'+RFIDId+'"}',
       type: "POST",
       contentType: "text/plain",
       success: function (records) {
         console.log(records);
       }
     });
-  })
+  }
 
+  $('#addRFID').click(function(){
+    addRFID($('#lastRFID').text());
+  });
+
+
+  let timerPWD = setInterval(() => {
+    $.ajax({
+      url: '../api/PWD',
+      type: "GET",
+      contentType: "application/json",
+      success: function (records) {
+        let s = "";
+        for (let i = 0; i < records.rec.length; i++) {
+          s = s + '<tr><td><div class="row"><div class="col-11">'+records.rec[i].pwd+'</div><div class="col-1-lg">'+
+               '<button type="button" class="btn btn-sm btn-block bg-danger" data-toggle="modal" data-target="#modal-lg" onclick="deletePWD('+records.rec[i].pwd+
+               ')"><i class="fas fa-trash"></i></button></td></div></div></td></tr>';
+        };
+        $('#PWDTable').html(s);
+      }
+    });
+  }, 1000);
+
+  let timerPWDlast = setInterval(() => {
+    $.ajax({
+      url: '../api/lastPWD',
+      type: "GET",
+      contentType: "application/json",
+      success: function (records) {
+        $('#lastPWD').text(records.pwd)
+      }
+    });
+  }, 1000);
+
+  function deletePWD(pwd){
+    $.ajax({
+      url: '../api/PWD?plain={"operation":"DEL", "pwd":"'+pwd+'"}',
+      type: "POST",
+      contentType: "text/plain",
+      success: function (records) {
+        console.log(records);
+      }
+    });
+  }
+
+  function addPWD(pwd){
+    $.ajax({
+      url: '../api/PWD?plain={"operation":"ADD", "pwd":"'+pwd+'"}',
+      type: "POST",
+      contentType: "text/plain",
+      success: function (records) {
+        console.log(records);
+      }
+    });
+  }
+
+  $('#addPWD').click(function(){
+    addPWD($('#lastPWD').text());
+  });
 </script>
 
 </body>
