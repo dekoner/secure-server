@@ -14,8 +14,8 @@
 #define DISCORD_SND false
 
 #ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
+#define STASSID "Serj-Home"
+#define STAPSK  "89205619790"
 #endif
 
 #define SECRET_WEBHOOK "https://discordapp.com/api/webhooks/785251307124031498/RfPd5mQJrt3qrJ5u_Jmb1eEOjjm070mGUTPXRC6Qu96wsNNAxqlveLJvQ1BLKN9-FSID"
@@ -40,6 +40,8 @@ bool secureState = false;
 bool alarm = false;
 String lastRFIDId = "";
 String arRFID[10];
+String lastPWD = "";
+String arPWD[10];
 
 // Fingerprint for demo URL, expires on June 2, 2021, needs to be updated well before this date
 const uint8_t fingerprint[20] = {0x03, 0xd3, 0xfe, 0xa6, 0x26, 0x78, 0x69, 0xd1, 0x03, 0xdf, 0x7f, 0x54, 0x38, 0xd0, 0x7e, 0x8a, 0x89, 0x6d, 0xb9, 0x67};
@@ -291,9 +293,11 @@ int genId() {
 }
 
 void addRFID(String id) {
+  DBG_OUTPUT_PORT.println("id");
   bool fl = false;
   int num = -1;
   for (byte i = 0; i < 10; i++) {
+    DBG_OUTPUT_PORT.println(arRFID[i]);
     if (arRFID[i] == id) {
       fl = true;
     }
@@ -302,7 +306,8 @@ void addRFID(String id) {
     }
   }
   if (!fl && (num >= 0)) {
-    arRFID[num] == id;
+    arRFID[num] = id;
+    DBG_OUTPUT_PORT.println("added" + String(id) + "__" + String(num));
   }
 }
 
@@ -310,6 +315,33 @@ void delRFID(String id) {
   for (byte i = 0; i < 10; i++) {
     if (arRFID[i] == id) {
       arRFID[i] = "";
+    }
+  }
+}
+
+void addPWD(String pwd) {
+  DBG_OUTPUT_PORT.println("id");
+  bool fl = false;
+  int num = -1;
+  for (byte i = 0; i < 10; i++) {
+    DBG_OUTPUT_PORT.println(arPWD[i]);
+    if (arPWD[i] == pwd) {
+      fl = true;
+    }
+    if ((arPWD[i] == "") && (num == -1)) {
+      num = i;
+    }
+  }
+  if (!fl && (num >= 0)) {
+    arPWD[num] = pwd;
+    DBG_OUTPUT_PORT.println("added" + String(pwd) + "__" + String(num));
+  }
+}
+
+void delPWD(String pwd) {
+  for (byte i = 0; i < 10; i++) {
+    if (arPWD[i] == pwd) {
+      arPWD[i] = "";
     }
   }
 }
@@ -575,8 +607,8 @@ void setup() {
     }
   });
 
-  server.on("/api/RFID", HTTP_GET, []() {
-    String json = "{[";
+  server.on("/api/grfid", HTTP_GET, []() {
+    String json = "{\"rec\":[";
     bool fl = false;
     for (byte i = 0; i < 10; i++) {
       if (arRFID[i] != "") {
@@ -594,6 +626,60 @@ void setup() {
 
   server.on("/api/lastRFID", HTTP_GET, []() {
     String json = "{\"RFIDId\":\"" + lastRFIDId + "\"}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+
+  server.on("/api/PWD", HTTP_POST, []() {
+    Serial.println("___");
+    if (server.args() == 0) {
+      server.send(500, "text/plain", "BAD ARGS");
+    } else {
+      String input = server.arg(0);
+      DBG_OUTPUT_PORT.println(input);
+      DynamicJsonDocument json(1024);
+      DeserializationError err = deserializeJson(json, input);
+      String PWD;
+      String operation;
+      if (!err) {
+        Serial.println("\nparsed json");
+
+        PWD = json["pwd"].as<String>();
+        operation = json["operation"].as<String>();
+      } else {
+        Serial.println("failed to load json config");
+      }
+
+      if (operation == "ADD") {
+        addPWD(PWD);
+      };
+      if (operation == "DEL") {
+        delPWD(PWD);
+      }
+      server.send(200, "text/plain", operation);
+      DBG_OUTPUT_PORT.println(operation);
+    }
+  });
+
+  server.on("/api/PWD", HTTP_GET, []() {
+    String json = "{\"rec\":[";
+    bool fl = false;
+    for (byte i = 0; i < 10; i++) {
+      if (arPWD[i] != "") {
+        if (fl) {
+          json += ",";
+        };
+        json += "{\"pwd\":\"" + arPWD[i] + "\"}";
+        fl = true;
+      }
+    }
+    json += "]}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+
+  server.on("/api/lastPWD", HTTP_GET, []() {
+    String json = "{\"pwd\":\"" + lastPWD + "\"}";
     server.send(200, "text/json", json);
     json = String();
   });
@@ -657,6 +743,10 @@ void setup() {
 
       if (type == "3") {
         lastRFIDId = sensor;
+      }
+
+      if (type == "2"){
+        lastPWD = sensor;
       }
     }
   });
